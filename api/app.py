@@ -1,45 +1,32 @@
-"""Main app from flask"""
+"""Main app"""
 import os
 from flask import Flask
-from flask_cors import CORS
 from dotenv import load_dotenv
-from config import Config
-from extensions import bcrypt, jwt, db, migrate
+from config import get_config
+from extensions import init_extensions
 from src.routes.auth_routes import auth_bp
-#from routes.users import users_bp
 
 load_dotenv()
 
 
-def create_app():
-    """Crea y configura la aplicación Flask."""
+def create_app() -> Flask:
+    """Create and configure flask app"""
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(get_config())
 
-    # Inicializar extensiones
-    CORS(app,
-         suports_credentials=True,
-         origins=["http://localhost:5173"]
-         )
-    bcrypt.init_app(app)
-    jwt.init_app(app)
-    db.init_app(app)
-    migrate.init_app(app, db)
-
-    # Importante para las migraciones de sqlalchemy
-    from src.models.user_model import User
-    from src.models.piece_model import Piece
+    init_extensions(app)
 
     # Registrar blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
-    #app.register_blueprint(users_bp, url_prefix="/api/users")
+    # app.register_blueprint(users_bp, url_prefix="/api/users")
 
     return app
+
 
 if __name__ == "__main__":
     app = create_app()
     app.run(
-        host=os.getenv("HOST"),
-        port=3000,
-        debug=os.getenv("DEBUG") == "True"
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", 3000)),
+        debug=os.getenv("FLASK_ENV", "development") == "development",
     )
