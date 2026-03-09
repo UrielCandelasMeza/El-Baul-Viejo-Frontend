@@ -10,22 +10,26 @@ from flask_jwt_extended import (
 )
 
 
-def generate_tokens(user_id):
+def generate_tokens(user_id, user_data: dict = None):
     """Genera access y refresh token y los setea en cookies."""
     access_token = create_access_token(identity=str(user_id))
     refresh_token = create_refresh_token(identity=str(user_id))
 
-    response = make_response(jsonify({"message": "Autenticado"}), 200)
+    body = {"message": "Autenticado"}
+    if user_data:
+        body["user"] = user_data
+
+    response = make_response(jsonify(body), 200)
 
     response.set_cookie(
-        "access_token",
+        "access_token_cookie",
         access_token,
         httponly=True,
         secure=Config.JWT_COOKIE_SECURE,
         samesite=Config.JWT_COOKIE_SAMESITE
     )
     response.set_cookie(
-        "refresh_token",
+        "refresh_token_cookie",
         refresh_token,
         httponly=True,
         secure=Config.JWT_COOKIE_SECURE,
@@ -46,11 +50,10 @@ def jwt_required_cookie(f):
 
         except Exception:
             # 2. Access token inválido o expirado, intentar con refresh token
-            refresh_token = request.cookies.get("refresh_token")
+            refresh_token = request.cookies.get("refresh_token_cookie")
 
             if not refresh_token:
                 return jsonify({"error": "Sesión expirada, inicia sesión de nuevo"}), 401
-
             try:
                 # 3. Verificar refresh token
                 verify_jwt_in_request(refresh=True)
@@ -70,7 +73,8 @@ def jwt_required_cookie(f):
                 )
                 return response
 
-            except Exception:
+            except Exception as e:
+                print(e)
                 return jsonify({"error": "Sesión expirada, inicia sesión de nuevo"}), 401
 
     return decorated

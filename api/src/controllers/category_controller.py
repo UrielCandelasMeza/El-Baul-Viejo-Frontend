@@ -1,5 +1,6 @@
 """Category controller"""
 from flask import request, jsonify
+from sqlalchemy import func
 from extensions import db
 from src.models.category_model import Category
 
@@ -20,20 +21,19 @@ def create_category():
     """Creates a new category"""
     data = request.get_json()
     name = data.get("name", "").strip() if data else ""
-    description = data.get("description", "").strip() if data else ""
 
     if not name:
         return jsonify({"success": False, "message": "El nombre es requerido"}), 400
 
     # Search duplicated
     existing = db.session.execute(
-        db.select(Category).where(Category.name == name)
+        db.select(Category).where(func.lower(Category.name) == name.lower())
     ).scalar_one_or_none()
 
     if existing:
         return jsonify({"success": False, "message": "Ya existe una categoría con ese nombre"}), 409
 
-    category = Category(name=name, description=description or None)
+    category = Category(name=name)
     db.session.add(category)
     db.session.commit()
 

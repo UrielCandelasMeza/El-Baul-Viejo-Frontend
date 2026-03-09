@@ -1,4 +1,5 @@
 from flask import jsonify, request
+from flask_jwt_extended import get_jwt_identity
 from extensions import db
 from src.models.piece_model import Piece, PieceStatus
 from src.lib.files import allowed_file, build_file_path, MAX_SIZE
@@ -48,8 +49,9 @@ def create_piece():
     description = request.form.get("description")
     photos = request.files.getlist("photos")
     category_ids = request.form.getlist("category_ids")
+    user_id = get_jwt_identity()
 
-    if not name or not price or not description or len(photos) == 0:
+    if not name or not price or len(category_ids) == 0 or len(photos) == 0:
         return jsonify({"success": False, "message": "Hay datos faltantes"}), 400
 
     if len(photos) > MAX_PHOTOS:
@@ -73,6 +75,7 @@ def create_piece():
         description=description,
         photos=urls,
         category_ids=category_ids,
+        user_id=user_id,
     )
     db.session.add(new_piece)
     db.session.commit()

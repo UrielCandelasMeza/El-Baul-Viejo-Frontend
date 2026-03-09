@@ -1,7 +1,8 @@
 """Auth Routes"""
 
 from flask import Blueprint
-from src.controllers.auth_controller import register_user, login_user
+from src.controllers.auth_controller import register_user, login_user, verify_token
+from src.lib.jwt import jwt_required_cookie
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -14,3 +15,9 @@ def register():
 def login():
     """Controller"""
     return login_user()
+
+@auth_bp.route("/verify", methods=["GET"])
+@jwt_required_cookie
+def verify():
+    """Verifica el token JWT y retorna el usuario autenticado"""
+    return verify_token()

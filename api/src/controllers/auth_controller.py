@@ -3,6 +3,7 @@ from flask import request, jsonify
 from extensions import db, bcrypt
 from src.models.user_model import User
 from src.lib.jwt import generate_tokens
+from flask_jwt_extended import get_jwt_identity
 
 def register_user():
     """Register a new user"""
@@ -68,4 +69,28 @@ def login_user():
             "success": False,
             "message": "La contraseña es incorrecta"
         }), 401
-    return generate_tokens(user_found.id)
+
+    user_data = {
+        "id": str(user_found.id),
+        "username": user_found.username,
+        "name": user_found.name
+    }
+    return generate_tokens(user_found.id, user_data)
+
+def verify_token():
+    """Verifica el token JWT y retorna el usuario autenticado"""
+    user_id = get_jwt_identity()
+
+    user = User.query.filter_by(id=user_id).first()
+
+    if not user:
+        return jsonify({"success": False, "message": "Usuario no encontrado"}), 404
+
+    return jsonify({
+        "success": True,
+        "user": {
+            "id": str(user.id),
+            "username": user.username,
+            "name": user.name
+        }
+    }), 200
