@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://el-baul-viejo-backend.onrender.com/"
+      "destination": "https://el-baul-viejo-backend.onrender.com/api"
     }
   ]
 }
