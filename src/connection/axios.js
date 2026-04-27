@@ -1,8 +1,10 @@
 import axios from "axios";
 
+const url = import.meta.env.VITE_API_URL;
+
 const instance = axios.create({
   withCredentials: true,
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: url ? `${url}/api` : "/api",
 });
 
 export default instance;
